@@ -1,0 +1,59 @@
+  version: '3.9'
+
+  services:
+
+    # Backend API
+    backend:
+      build: ./backend
+      container_name: task-backend
+      restart: always
+      env_file: ./backend/.env
+      depends_on:
+        - redis
+      networks:
+        - tasknet
+
+    # Worker
+    worker:
+      build: ./worker
+      container_name: task-worker
+      restart: always
+      env_file: ./worker/.env
+      depends_on:
+        - redis
+      networks:
+        - tasknet
+
+    # Nginx
+    nginx:
+      build: 
+        context: .
+        dockerfile: ./nginx/Dockerfile
+      container_name: task-nginx
+      restart: always
+      ports:
+        - "80:80"
+      depends_on:
+        - backend
+      networks:
+        - tasknet
+
+    # Redis
+    redis:
+      image: redis:7-alpine
+      container_name: task-redis
+      restart: always
+      volumes:
+        - redis_data:/data
+      networks:
+        - tasknet
+
+
+  # Volumes
+  volumes:
+    redis_data:
+
+  networks:
+    tasknet:
+      driver: bridge
+
